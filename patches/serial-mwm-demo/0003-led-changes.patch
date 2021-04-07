@@ -1,0 +1,205 @@
+diff --git a/sample_apps/serial_mwm_demo/src/serial_mwm_app.c b/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
+old mode 100644
+new mode 100755
+index 39c8893..1db3af0
+--- a/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
++++ b/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
+@@ -46,6 +46,7 @@
+ #include <serial_mwm_pdrv.h>
+ #include <serial_mwm_defaults.h>
+ #include <mdev.h>
++#include <led_indicator.h> /* Added by Murata */
+ 
+ #define MFG_PART_NAME "mfg"
+ /* Provisioning pin required during Non-iOS provisioning */
+@@ -83,6 +84,11 @@ static os_thread_stack_define(serial_mwm_app_stack, 6 * 1024);
+ 
+ extern mdev_t *mdev_uart;
+ 
++/* Added by Murata - For LED Indicators */
++#define board_led_off		led_on
++#define board_led_on		led_off
++#define board_led_fast_blink	led_fast_blink
++
+ int debug_console_printf(char *str)
+ {
+ 	int len;
+@@ -363,14 +369,27 @@ static int serial_mwm_init()
+ int main(void)
+ {
+ 	int ret;
++
++	/* Step 1:: Murata: Turn ON LED 1 Module uninitialized */
++	board_led_on(board_led_1());
++	board_led_on(board_led_2());
++
+ 	/* Initialize WM core modules */
+ 	ret = serial_mwm_init();
+ 	if (ret) {
+ 		MWM_RX_APP_LOG("Err...system core init failed: %d\r\n", ret);
++
++		/* Fast blinking of RED light */
++		board_led_fast_blink(board_led_1());
++
+ 		/* System core init failed, just wait forever here */
+ 		while (1)
+ 			;
+ 	}
++
++	/* Step 2:: Murata: Turn OFF LED 1 Module initialized */
++	board_led_off(board_led_1());
++
+ 	/* Create mutex to synchronize calls to uart write */
+ 	ret = os_mutex_create(&uart_write_sem, "uart_write_sem",
+ 			      OS_MUTEX_INHERIT);
+diff --git a/sample_apps/serial_mwm_demo/src/serial_mwm_wlan_event.c b/sample_apps/serial_mwm_demo/src/serial_mwm_wlan_event.c
+old mode 100644
+new mode 100755
+index ed1460b..6da9239
+--- a/sample_apps/serial_mwm_demo/src/serial_mwm_wlan_event.c
++++ b/sample_apps/serial_mwm_demo/src/serial_mwm_wlan_event.c
+@@ -101,8 +101,13 @@ static void enable_external_antennae_if_supported()
+ }
+ #endif
+ 
+-#define board_led_off
+-#define board_led_on
++/* Start: Added by Murata - for LED indicators */
++#define board_led_off			led_on
++#define board_led_on			led_off
++#define board_led_slow_blink		led_slow_blink
++#define board_led_fast_blink		led_fast_blink
++/* End: Added by Murata */
++
+ static os_timer_t uap_down_timer;
+ 
+ #define UAP_DOWN_TIMEOUT (30 * 1000)
+@@ -287,6 +292,10 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 				serial_mwm_send_event(event_bitmap.wlan, 0,
+ 					 MWM_EVENT_WLAN_PROVISIONING_START,
+ 						      NULL, 0);
++
++				/* Murata:: Provisioning started => Slow blinking*/
++				board_led_slow_blink(board_led_2());
++
+ 				mwm_start_flag = true;
+ 			} else {
+ #endif
+@@ -339,8 +348,6 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 		serial_mwm_send_event(event_bitmap.wlan, 0,
+ 				      MWM_EVENT_WLAN_WPS_SESSION_UNSUCCESSFUL,
+ 				      NULL, 0);
+-		board_led_off(board_led_4());
+-		board_led_on(board_led_2());
+ 		os_thread_sleep(os_msec_to_ticks(1000));
+ 		break;
+ 	case AF_EVT_PROV_WPS_REQ_TIMEOUT:
+@@ -363,6 +370,7 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 		 * network. Include some progress indicators while the
+ 		 * connection attempt either succeeds or fails
+ 		 */
++
+ 		if (event == AF_EVT_PROV_DONE) {
+ 			mwm_state = MWM_STATE_PROVISIONING_DONE;
+ 			serial_mwm_send_event(event_bitmap.wlan, 0,
+@@ -386,6 +394,10 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 				}
+ #endif
+ 		}
++
++		/* Murata :: Provisioning completed => Fast Blinking, as it tries to connect to Network*/
++		board_led_fast_blink(board_led_2());
++
+ 		reconnect_attempts = 0;
+ 		failure_code = 0;
+ 		break;
+@@ -395,10 +407,6 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 		serial_mwm_send_event(event_bitmap.wlan, 0,
+ 				      MWM_EVENT_WLAN_CONNECTING,
+ 				      NULL, 0);
+-		board_led_off(board_led_1());
+-		board_led_off(board_led_4());
+-		board_led_off(board_led_2());
+-		board_led_on(board_led_3());
+ 		/* Set the hostname same as the device name. Device name
+ 		 * can be modified during WAC provisioning. */
+ 		app_get_device_name(hostname, sizeof(hostname));
+@@ -411,6 +419,11 @@ int serial_mwm_app_event_handler(int event, void *data)
+ #endif /* APPCONFIG_MDNS_RESPONDER */
+ 		break;
+ 	case AF_EVT_NORMAL_CONNECTED:
++
++		/* Step 3:: Murata: Turn OFF both LED's : Connected to WLAN (Access Point) */
++		board_led_off(board_led_1());
++		board_led_off(board_led_2());
++
+ 		/* We have successfully connected to the network. Note that
+ 		 * we can get here after normal bootup or after successful
+ 		 * provisioning.
+@@ -429,10 +442,6 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 		}
+ #endif /* APPCONFIG_MDNS_RESPONDER */
+ 		app_network_ip_get(ip);
+-		board_led_off(board_led_2());
+-		board_led_off(board_led_4());
+-		board_led_off(board_led_3());
+-		board_led_on(board_led_1());
+ 		if (is_uap_started() == false) {
+ 			if (serial_mwm_get_power_save_status() == true) {
+ 				listen_interval =
+@@ -493,10 +502,6 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 		} else {
+ 			call_thread_sleep();
+ 		}
+-		board_led_off(board_led_1());
+-		board_led_off(board_led_4());
+-		board_led_off(board_led_3());
+-		board_led_on(board_led_2());
+ 		return ret;
+ 		break;
+ 	case AF_EVT_UAP_STARTED:
+@@ -516,6 +521,8 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 			serial_mwm_send_event(event_bitmap.wlan, 0,
+ 					      MWM_EVENT_WLAN_PROVISIONING_START,
+ 					      NULL, 0);
++			/* Murata: Provisioning started */
++			board_led_slow_blink(board_led_2());
+ 		}
+ 		break;
+ 	case AF_EVT_PROV_CLIENT_DONE:
+@@ -541,16 +548,11 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 		serial_mwm_load_wps_overlay();
+ 		serial_mwm_set_conf(MWM_MOD_WLAN, MWM_WLAN_CONFIGURED,
+ 				  "0");
++		/* Murata commented out old led code */
+ 		for (i = 0; i < 5; i++) {
+-			board_led_on(board_led_2());
+ 			os_thread_sleep(os_msec_to_ticks(500));
+-			board_led_off(board_led_2());
+ 			os_thread_sleep(os_msec_to_ticks(500));
+ 		}
+-		board_led_off(board_led_1());
+-		board_led_on(board_led_2());
+-		board_led_off(board_led_3());
+-		board_led_off(board_led_4());
+ 
+ 		if (mwm_start_flag == true) {
+ #ifdef APPCONFIG_PROV_EZCONNECT
+@@ -622,15 +624,13 @@ int serial_mwm_app_event_handler(int event, void *data)
+ 						NULL, 0);
+ 				}
+ #endif
++			/* Murata: Provisioning started */
++			board_led_slow_blink(board_led_2());
+ 		}
+ 		reconnect_attempts = 0;
+ 		failure_code = 0;
+ 		break;
+ 	case AF_EVT_NORMAL_USER_DISCONNECT:
+-		board_led_off(board_led_1());
+-		board_led_off(board_led_4());
+-		board_led_off(board_led_3());
+-		board_led_on(board_led_2());
+ 		mwm_state = MWM_STATE_DISCONNECTED;
+ 		serial_mwm_send_event(event_bitmap.wlan, 0,
+ 				      MWM_EVENT_WLAN_DISCONNECTED,

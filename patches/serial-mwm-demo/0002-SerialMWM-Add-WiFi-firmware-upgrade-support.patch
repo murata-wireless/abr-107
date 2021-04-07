@@ -1,0 +1,110 @@
+diff --git a/sample_apps/serial_mwm_demo/src/layout_mw300_rd.txt b/sample_apps/serial_mwm_demo/src/layout_mw300_rd.txt
+index 8f24f23..cae7576 100644
+--- a/sample_apps/serial_mwm_demo/src/layout_mw300_rd.txt
++++ b/sample_apps/serial_mwm_demo/src/layout_mw300_rd.txt
+@@ -4,8 +4,9 @@ FC_COMP_USER_APP	0x6000		0x2000		0	mfg
+ FC_COMP_PSM		0x8000		0x2000		0	psm
+ FC_COMP_USER_APP	0xa000		0x1000   	0       cert0
+ FC_COMP_USER_APP	0xb000		0x1000   	0       cert1
+-FC_COMP_FW		0xc000		0x59000		0	mcufw
+-FC_COMP_FW		0x65000		0x59000		0	mcufw
+-FC_COMP_WLAN_FW		0xbe000		0x41000		0	wififw
+-FC_COMP_FTFS		0xff000		0x30000		0	ftfs
+-FC_COMP_FTFS		0x12f000	0x30000		0	ftfs
++FC_COMP_FW		0xc000		0x64000		0	mcufw
++FC_COMP_FW		0x70000		0x64000		0	mcufw
++FC_COMP_WLAN_FW		0xd4000		0x41000		0	wififw
++FC_COMP_WLAN_FW		0x115000	0x41000		0	wififw
++FC_COMP_FTFS		0x156000	0x30000		0	ftfs
++FC_COMP_FTFS		0x186000	0x30000		0	ftfs
+diff --git a/sample_apps/serial_mwm_demo/src/serial_mwm_app.c b/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
+index 0ad1d18..39c8893 100644
+--- a/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
++++ b/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
+@@ -242,7 +242,8 @@ void serial_mwm_host_wakeup_delay()
+ static int serial_mwm_init()
+ {
+ 	int ret = WM_SUCCESS;
+-	struct partition_entry *p;
++	struct partition_entry *p, *p1, *p2;
++	short index = 0;
+ 	flash_desc_t fl;
+ 
+ 	ret = os_semaphore_create(&shutdown_sem, "block-shutdown-cmd");
+@@ -297,8 +298,15 @@ static int serial_mwm_init()
+ 		serial_mwm_mfg_init(&fl);
+ 	}
+ 
+-	p = part_get_layout_by_id(FC_COMP_WLAN_FW, NULL);
+-	if (p == NULL) {
++	p1 = part_get_layout_by_id(FC_COMP_WLAN_FW, &index);
++	p2 = part_get_layout_by_id(FC_COMP_WLAN_FW, &index);
++	if (p1 && p2)
++		p = part_get_active_partition(p1, p2);
++	else if (!p1 && p2)
++		p = p2;
++	else if (!p2 && p1)
++		p = p1;
++	else {
+ 		ret = -4;
+ 		goto out;
+ 	}
+diff --git a/sdk/src/middleware/serial_mwm/serial_mwm_sys_handlers.c b/sdk/src/middleware/serial_mwm/serial_mwm_sys_handlers.c
+index f6b2d46..6b39bdc 100644
+--- a/sdk/src/middleware/serial_mwm/serial_mwm_sys_handlers.c
++++ b/sdk/src/middleware/serial_mwm/serial_mwm_sys_handlers.c
+@@ -212,6 +212,23 @@ static void upgrade(void)
+ 				ret = https_client_mode_update(p);
+ #else
+ 				ret = -WM_E_HTTPC_TLS_NOT_ENABLED;
++#endif
++			} else {
++				ret = rfget_client_mode_update(url, p, NULL);
++			}
++		}
++	}  else if (!strcasecmp(type, "wf")) {
++		upgrade_status = UPGRADE_IN_PROGRESS;
++		upgrade_status_code = E_UPG_IN_PROGRESS;
++		p = rfget_get_passive_wifi_firmware();
++		if (p == NULL) {
++			upgrade_status_code = -E_INVALID_FW_LAYOUT;
++		} else {
++			if (!strncmp("https", url, 5)) {
++#ifdef CONFIG_ENABLE_HTTPC_SECURE
++				ret = https_client_mode_update(p);
++#else
++				ret = -WM_E_HTTPC_TLS_NOT_ENABLED;
+ #endif
+ 			} else {
+ 				ret = rfget_client_mode_update(url, p, NULL);
+@@ -339,7 +356,8 @@ int mwm_upgrade(const int argc, const char **argv)
+ 	}
+ 	val =  argv[0];
+ 	strncpy(type, val, sizeof(type));
+-	if ((!strcasecmp(type, "fs") || !strcasecmp(type, "fw")) && argc == 2) {
++	if ((!strcasecmp(type, "fs") || !strcasecmp(type, "fw") ||
++				!strcasecmp(type, "wf")) && argc == 2) {
+ 		val = argv[1];
+ 		if (*val == '\0') {
+ 			mwm_send_status(-E_INVAL_URL, "status:invalid URL",
+diff --git a/sample_apps/serial_mwm_demo/src/config-sdk.mfg b/sample_apps/serial_mwm_demo/src/config-sdk.mfg
+index 6f91c61..e2120b3 100644
+--- a/sample_apps/serial_mwm_demo/src/config-sdk.mfg
++++ b/sample_apps/serial_mwm_demo/src/config-sdk.mfg
+@@ -1,6 +1,6 @@
+ prov.ssid=Serial2Wifi
+ prov.security=4
+-prov.passphrase=marvellwm
++prov.passphrase=nxp12345
+ prov.mdns_enabled=1
+ prov.mdns_hostname=Serial2Wifi
+ wlan.ssid=ssid
+@@ -26,4 +26,4 @@ system.host_wk_gpio=-1
+ system.host_wk_gpio_level=0
+ system.host_wk_delay=0
+ system.proto_uart_id=0
+-system.debug_uart_id=1
++system.debug_uart_id=2
+-- 
+2.17.1
+

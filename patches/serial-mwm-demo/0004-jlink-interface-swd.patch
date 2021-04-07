@@ -1,0 +1,9 @@
+diff --git a/sdk/tools/OpenOCD/interface/jlink.cfg b/sdk/tools/OpenOCD/interface/jlink.cfg
+index 228fed3..4a9e3fa 100644
+--- a/sdk/tools/OpenOCD/interface/jlink.cfg
++++ b/sdk/tools/OpenOCD/interface/jlink.cfg
+@@ -5,3 +5,4 @@
+ # 
+ 
+ interface jlink
++transport select swd

@@ -1,0 +1,13 @@
+diff --git a/sample_apps/serial_mwm_demo/src/serial_mwm_app.c b/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
+index 1db3af0..56309b4 100755
+--- a/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
++++ b/sample_apps/serial_mwm_demo/src/serial_mwm_app.c
+@@ -388,7 +388,7 @@ int main(void)
+ 	}
+ 
+ 	/* Step 2:: Murata: Turn OFF LED 1 Module initialized */
+-	board_led_off(board_led_1());
++	board_led_fast_blink(board_led_1());
+ 
+ 	/* Create mutex to synchronize calls to uart write */
+ 	ret = os_mutex_create(&uart_write_sem, "uart_write_sem",

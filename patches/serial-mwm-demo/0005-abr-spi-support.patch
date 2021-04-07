@@ -1,0 +1,26 @@
+diff --git a/sdk/src/boards/mw300_rd.c b/sdk/src/boards/mw300_rd.c
+index 2999446..68710c0 100644
+--- a/sdk/src/boards/mw300_rd.c
++++ b/sdk/src/boards/mw300_rd.c
+@@ -121,15 +121,15 @@ void board_ssp_pin_config(int id, bool cs)
+ 		GPIO_PinMuxFun(GPIO_3, GPIO3_SSP0_RXD);
+ 		break;
+ 	case SSP1_ID:
+-		GPIO_PinMuxFun(GPIO_11, GPIO11_SSP1_CLK);
++		GPIO_PinMuxFun(GPIO_42, GPIO11_SSP1_CLK);
+ 		if (cs)
+-			GPIO_PinMuxFun(GPIO_12, GPIO12_SSP1_FRM);
++			GPIO_PinMuxFun(GPIO_43, GPIO12_SSP1_FRM);
+ 		else {
+-			GPIO_PinMuxFun(GPIO_12, GPIO12_GPIO12);
+-			GPIO_SetPinDir(GPIO_12, GPIO_INPUT);
++			GPIO_PinMuxFun(GPIO_43, GPIO12_GPIO12);
++			GPIO_SetPinDir(GPIO_43, GPIO_INPUT);
+ 		}
+-		GPIO_PinMuxFun(GPIO_13, GPIO13_SSP1_TXD);
+-		GPIO_PinMuxFun(GPIO_14, GPIO14_SSP1_RXD);
++		GPIO_PinMuxFun(GPIO_44, GPIO13_SSP1_TXD);
++		GPIO_PinMuxFun(GPIO_45, GPIO14_SSP1_RXD);
+ 		break;
+ 	case SSP2_ID:
+ 		GPIO_PinMuxFun(GPIO_46, GPIO46_SSP2_CLK);

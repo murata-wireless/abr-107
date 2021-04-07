@@ -1,0 +1,72 @@
+diff --git a/sdk/src/boards/mw300_rd.c b/sdk/src/boards/mw300_rd.c
+index 68710c0..6d03a95 100644
+--- a/sdk/src/boards/mw300_rd.c
++++ b/sdk/src/boards/mw300_rd.c
+@@ -50,7 +50,6 @@ int board_32k_xtal()
+ 
+ int board_32k_osc()
+ {
+-	//return true;
+ 	return false;
+ }
+ 
+@@ -93,8 +92,8 @@ void board_i2c_pin_config(int id)
+ 		GPIO_PinMuxFun(GPIO_5, GPIO5_I2C0_SCL);
+ 		break;
+ 	case I2C1_PORT:
+-		GPIO_PinMuxFun(GPIO_17, GPIO17_I2C1_SCL);
+-		GPIO_PinMuxFun(GPIO_18, GPIO18_I2C1_SDA);
++		GPIO_PinMuxFun(GPIO_25, GPIO25_I2C1_SDA);
++		GPIO_PinMuxFun(GPIO_26, GPIO26_I2C1_SCL);
+ 		break;
+ 	}
+ }
+@@ -106,7 +105,6 @@ I2C_ID_Type board_acodec_i2c_id(void)
+ 
+ void board_usb_pin_config()
+ {
+-	GPIO_PinMuxFun(GPIO_27, GPIO27_DRVVBUS);
+ }
+ 
+ void board_ssp_pin_config(int id, bool cs)
+@@ -148,32 +146,11 @@ SSP_ID_Type board_acodec_ssp_id(void)
+ 
+ int board_adc_pin_config(int adc_id, int channel)
+ {
+-	/* Channel 2 and channel 3 need GPIO 44
+-	 * and GPIO 45 which are used for
+-	 * RF control and not available for ADC
+-	 */
+-	if (channel == ADC_CH2 || channel == ADC_CH3) {
+-		return -WM_FAIL;
+-	}
+-	GPIO_PinMuxFun((GPIO_42 + channel),
+-			 PINMUX_FUNCTION_1);
+ 	return WM_SUCCESS;
+ }
+ 
+ void board_dac_pin_config(int channel)
+ {
+-	switch (channel) {
+-	case DAC_CH_A:
+-		/* For this channel GPIO 44 is needed
+-		 * GPIO 44 is reserved for  RF control
+-		 * on this module so channel DAC_CH_A
+-		 * should not be used.
+-		 */
+-		break;
+-	case DAC_CH_B:
+-		GPIO_PinMuxFun(GPIO_43, GPIO43_DACB);
+-		break;
+-	}
+ }
+ 
+ output_gpio_cfg_t board_led_1()
+@@ -215,7 +192,6 @@ output_gpio_cfg_t board_led_4()
+ 
+ int board_button_1()
+ {
+-	GPIO_PinMuxFun(GPIO_26, GPIO26_GPIO26);
+ 	return GPIO_26;
+ }
+ 

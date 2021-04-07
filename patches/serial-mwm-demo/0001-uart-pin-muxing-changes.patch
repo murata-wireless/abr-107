@@ -1,0 +1,33 @@
+diff --git a/sdk/src/boards/mw300_rd.c b/sdk/src/boards/mw300_rd.c
+index 72fd6ae..2999446 100644
+--- a/sdk/src/boards/mw300_rd.c
++++ b/sdk/src/boards/mw300_rd.c
+@@ -50,7 +50,8 @@ int board_32k_xtal()
+ 
+ int board_32k_osc()
+ {
+-	return true;
++	//return true;
++	return false;
+ }
+ 
+ int board_rc32k_calib()
+@@ -71,13 +72,15 @@ void board_uart_pin_config(int id)
+ 	case UART0_ID:
+ 		GPIO_PinMuxFun(GPIO_2, GPIO2_UART0_TXD);
+ 		GPIO_PinMuxFun(GPIO_3, GPIO3_UART0_RXD);
++		GPIO_PinMuxFun(GPIO_0, GPIO0_UART0_CTSn);
++		GPIO_PinMuxFun(GPIO_1, GPIO1_UART0_RTSn);
+ 		break;
+ 	case UART1_ID:
+-		GPIO_PinMuxFun(GPIO_13, GPIO13_UART1_TXD);
+-		GPIO_PinMuxFun(GPIO_14, GPIO14_UART1_RXD);
++		/* Not implemented yet */
+ 		break;
+ 	case UART2_ID:
+-		/* Not implemented yet */
++		GPIO_PinMuxFun(GPIO_48, GPIO48_UART2_TXD);
++		GPIO_PinMuxFun(GPIO_49, GPIO49_UART2_RXD);
+ 		break;
+ 	}
+ }

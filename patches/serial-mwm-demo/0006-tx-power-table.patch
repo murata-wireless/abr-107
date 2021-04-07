@@ -1,0 +1,102 @@
+diff --git a/sdk/src/boards/modules/gti-mw300.c b/sdk/src/boards/modules/gti-mw300.c
+index 7f426d2..bf8c8e6 100644
+--- a/sdk/src/boards/modules/gti-mw300.c
++++ b/sdk/src/boards/modules/gti-mw300.c
+@@ -30,6 +30,75 @@
+ #include <board.h>
+ #include <lowlevel_drivers.h>
+ 
++/*
++Transmit Power Values
++=====================
++For EU
++-------------------------------------------------
++Tx Power Level	        |	All CH |  Units |
++------------------------|--------------|--------|
++802.11b (All data rate) |	17     |  dBm   |
++802.11g (All data rate)	|	15     |  dBm   |
++802.11n (All data rate)	|	14     |  dBm   |
++-------------------------------------------------
++
++For FCC/IC
++-------------------------------------------------------------------------
++	11b	     |		11g	     |		11n		|
++---------------------|-----------------------|--------------------------|
++CH1	CH2-10	CH11 |	CH1	CH2-10	CH11 |	CH1	CH2-10	CH11	|
++---------------------|-----------------------|--------------------------|
++17	17	17   |	12	15	10   |	10	14	8	|
++-------------------------------------------------------------------------
++*/
++
++// Added FCC and EU for setting power
++uint8_t FCC_data[14][8] = {
++	{1, 17, 12, 12, 12, 10, 10, 10},
++	{2, 17, 15, 15, 15, 14, 14, 14},
++	{3, 17, 15, 15, 15, 14, 14, 14},
++	{4, 17, 15, 15, 15, 14, 14, 14},
++	{5, 17, 15, 15, 15, 14, 14, 14},
++	{6, 17, 15, 15, 15, 14, 14, 14},
++	{7, 17, 15, 15, 15, 14, 14, 14},
++	{8, 17, 15, 15, 15, 14, 14, 14},
++	{9, 17, 15, 15, 15, 14, 14, 14},
++	{10, 17, 15, 15, 15, 14, 14, 14},
++	{11, 17, 10, 10, 10, 8, 8, 8},
++};
++
++uint8_t EU_data[14][8] = {
++	{1, 17, 15, 15, 15, 14, 14, 14},
++    	{2, 17, 15, 15, 15, 14, 14, 14},
++    	{3, 17, 15, 15, 15, 14, 14, 14},
++    	{4, 17, 15, 15, 15, 14, 14, 14},
++    	{5, 17, 15, 15, 15, 14, 14, 14},
++    	{6, 17, 15, 15, 15, 14, 14, 14},
++    	{7, 17, 15, 15, 15, 14, 14, 14},
++    	{8, 17, 15, 15, 15, 14, 14, 14},
++    	{9, 17, 15, 15, 15, 14, 14, 14},
++    	{10, 17, 15, 15, 15, 14, 14, 14},
++    	{11, 17, 15, 15, 15, 14, 14, 14},
++};
++
++
++
++
++
++static struct pwr_table pt[] = {
++    {
++        BOARD_COUNTRY_US,
++        11,
++        (const uint8_t **)FCC_data
++    },
++    {
++        BOARD_COUNTRY_EU,
++        13,
++        (const uint8_t **)EU_data
++    },
++};
++
++
+ int board_main_xtal()
+ {
+ 	/* MAINXTAL: 38.4MHZ */
+@@ -48,5 +117,20 @@ int board_antenna_switch_ctrl()
+ 
+ struct pwr_table *board_region_pwr_tbl(board_country_code_t country)
+ {
+-	return NULL;
++    switch (country) {
++    case BOARD_COUNTRY_US:
++        return &pt[0];
++    case BOARD_COUNTRY_CA:
++        return &pt[0];
++    case BOARD_COUNTRY_SG:
++    case BOARD_COUNTRY_EU:
++    case BOARD_COUNTRY_AU:
++    case BOARD_COUNTRY_KR:
++    case BOARD_COUNTRY_FR:
++    case BOARD_COUNTRY_JP:
++    case BOARD_COUNTRY_CN:
++        return NULL;
++    default:
++        return NULL;
++    }
+ }
