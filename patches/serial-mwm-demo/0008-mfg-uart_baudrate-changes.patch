@@ -1,0 +1,11 @@
+--- sample_apps/mfg/uart_wifi_bridge/src/uart_wifi_bridge-orig.h	2021-05-05 10:53:51.009382700 +0530
++++ sample_apps/mfg/uart_wifi_bridge/src/uart_wifi_bridge.h	2021-05-05 10:53:30.361004500 +0530
+@@ -28,7 +28,7 @@
+ 
+ #include <compat_attribute.h>
+ 
+-#define BAUD_RATE 1500000
++#define BAUD_RATE 115200
+ 
+ /* Configure BUF_LEN : length of the buffer used to send wifi packets */
+ #define BUF_LEN 1024
